@@ -1,38 +1,20 @@
-<p align="center">
-  <img src="img/ico.png" width="200" alt="kwach logo">
-</p>
+<img src="img/ico.png" width="200" alt="kwach logo">
 
-<h1 align="center">kwach</h1>
+# kwach
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white" alt="Go 1.26">
-  <img src="https://img.shields.io/badge/license-MIT-d6402b" alt="MIT license">
-  <img src="https://img.shields.io/badge/status-prototype-6b6861" alt="Status: prototype">
-</p>
+![Go 1.26](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)
+![MIT license](https://img.shields.io/badge/license-MIT-d6402b)
+![Status: prototype](https://img.shields.io/badge/status-prototype-6b6861)
 
-<p align="center">
-  A Go service that generates a short roast from a user's profile and recent news,
-  screens it with a safety model, converts it to speech, and stores profiles and chat history for context.
-</p>
+A Go service that generates a short roast from a user's profile and recent news,
+screens it with a safety model, converts it to speech, and stores profiles and chat history for context.
 
 ## Technology
 
-<table align="center">
-  <tr>
-    <td align="center" width="120"><img src="img/logo/go.svg" width="40" alt="Go"><br>Go</td>
-    <td align="center" width="120"><img src="img/logo/docker.svg" width="40" alt="Docker"><br>Docker</td>
-    <td align="center" width="120"><img src="img/logo/groq.svg" height="24" alt="Groq"><br>Groq</td>
-    <td align="center" width="120">
-      <img src="https://eleven-public-cdn.elevenlabs.io/payloadcms/elevenlabs-official-logo.svg" width="110" alt="ElevenLabs"><br>ElevenLabs
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="120"><img src="img/logo/mongodb.svg" width="40" alt="MongoDB"><br>MongoDB</td>
-    <td align="center" width="120"><img src="img/logo/redis.svg" width="40" alt="Redis"><br>Redis</td>
-    <td align="center" width="120"><img src="img/logo/googlenews.svg" width="40" alt="Google News"><br>Google News</td>
-    <td align="center" width="120"><img src="img/logo/nginx.svg" width="40" alt="nginx"><br>nginx</td>
-  </tr>
-</table>
+| | | | |
+|---|---|---|---|
+| <img src="img/logo/go.svg" width="40" alt="Go"> Go | <img src="img/logo/docker.svg" width="40" alt="Docker"> Docker | <img src="img/logo/groq.svg" height="24" alt="Groq"> Groq | <img src="https://eleven-public-cdn.elevenlabs.io/payloadcms/elevenlabs-official-logo.svg" width="110" alt="ElevenLabs"> ElevenLabs |
+| <img src="img/logo/mongodb.svg" width="40" alt="MongoDB"> MongoDB | <img src="img/logo/redis.svg" width="40" alt="Redis"> Redis | <img src="img/logo/googlenews.svg" width="40" alt="Google News"> Google News | <img src="img/logo/nginx.svg" width="40" alt="nginx"> nginx |
 
 ## Quick start
 
