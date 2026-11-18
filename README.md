@@ -14,6 +14,10 @@
 A Go service that generates a short roast from a user's profile and recent news,
 screens it with a safety model, converts it to speech, and stores profiles and chat history for context.
 
+<p align="center">
+  <img src="img/screenshot.png" alt="kwach interview screen">
+</p>
+
 ## Technology
 
 <div align="center">

@@ -3,109 +3,238 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Jarvis Roast</title>
+  <title>kwach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f6f5f2; --fg: #1d1c1a; --muted: #6b6861; --card: #ffffff;
-      --accent: #d6402b; --border: #d9d6cf;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        --bg: #161514; --fg: #f1efea; --muted: #a09c93; --card: #201f1d;
-        --accent: #ff6b57; --border: #3a3834;
-      }
-    }
-    :root[data-theme="dark"] {
-      --bg: #161514; --fg: #f1efea; --muted: #a09c93; --card: #201f1d;
-      --accent: #ff6b57; --border: #3a3834;
+      --backdrop: #100e0b;
+      --fg: #ffffff;
+      --muted: rgba(255, 255, 255, 0.6);
+      --line: rgba(255, 255, 255, 0.18);
+      --glass: rgba(255, 255, 255, 0.06);
     }
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; }
-    main { max-width: 480px; margin: 0 auto; padding: 16px; }
-    h1 { font-size: 1.6rem; margin: 16px 0 4px; }
-    p.lead { color: var(--muted); margin: 0 0 16px; }
-    form { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: grid; gap: 12px; }
-    label { display: grid; gap: 4px; font-size: 0.9rem; color: var(--muted); }
-    input, select, textarea {
-      font: inherit; color: var(--fg); background: var(--bg);
-      border: 1px solid var(--border); border-radius: 8px; padding: 10px; width: 100%;
+    body {
+      margin: 0;
+      background-color: var(--backdrop);
+      color: var(--fg);
+      font-family: Poppins, system-ui, -apple-system, "Segoe UI", sans-serif;
     }
-    textarea { min-height: 88px; resize: vertical; }
-    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    button { font: inherit; border: 0; border-radius: 8px; padding: 12px 16px; cursor: pointer; }
-    button.primary { background: var(--accent); color: #fff; flex: 1; }
-    button.secondary { background: transparent; color: var(--fg); border: 1px solid var(--border); flex: 1; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-    #status { min-height: 1.2em; color: var(--muted); font-size: 0.9rem; margin: 12px 0; }
-    audio { width: 100%; margin-top: 12px; }
+
+    .aura-bg {
+      position: relative;
+      overflow: hidden;
+      min-height: 100vh;
+    }
+    .aura-layer-1,
+    .aura-layer-2,
+    .aura-layer-3 {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      transform: translateZ(0);
+      will-change: transform;
+    }
+    .aura-layer-1 {
+      background: radial-gradient(ellipse 120% 145% at 50% -50%, rgba(0,0,0,0) 58%, rgb(240,240,245) 76%, rgba(0,0,0,0) 84%);
+      mix-blend-mode: screen;
+      filter: blur(63px);
+      opacity: 0.9;
+    }
+    .aura-layer-2 {
+      background: radial-gradient(ellipse 120% 145% at 50% -50%, rgba(0,0,0,0) 50%, rgba(121,42,242,0.35) 78%, rgba(0,0,0,0) 100%);
+      mix-blend-mode: screen;
+      filter: blur(200px);
+    }
+    .aura-layer-3 {
+      background: radial-gradient(ellipse 120% 145% at 50% -50%, rgba(0,0,0,0) 82.5%, #ff007a 83.5%, rgba(0,0,0,0) 84.5%);
+      mix-blend-mode: lighten;
+      filter: blur(30px);
+      opacity: 0.75;
+    }
+    @media (min-width: 768px) {
+      .aura-layer-1 { filter: blur(90px); }
+      .aura-layer-2 { filter: blur(260px); }
+      .aura-layer-3 { filter: blur(43px); }
+    }
+
+    .stage {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15vh 16px 48px;
+    }
+
+    .mic {
+      width: 96px;
+      height: 96px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--glass);
+      color: var(--fg);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, transform 0.2s;
+    }
+    .mic:hover { transform: scale(1.04); }
+    .mic:focus-visible { outline: 2px solid var(--fg); outline-offset: 4px; }
+    .mic[aria-pressed="true"] { background: var(--fg); color: var(--backdrop); }
+    .mic:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .mic svg { width: 36px; height: 36px; }
+    .mic {
+      --level: 0;
+      scale: calc(1 + var(--level) * 0.12);
+      box-shadow: 0 0 calc(var(--level) * 70px) calc(var(--level) * 12px) rgba(255, 255, 255, calc(var(--level) * 0.85));
+      transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.08s linear, scale 0.08s linear;
+    }
+
+    .status {
+      min-height: 1.2em;
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    .text {
+      width: 100%;
+      max-width: 1100px;
+      margin: 40px 0 0;
+      color: var(--fg);
+      font-size: clamp(2.25rem, 7vw, 6rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+
+    .answer {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      max-width: 520px;
+      margin: 32px 0 0;
+    }
+    .answer input {
+      flex: 1;
+      min-width: 0;
+      padding: 12px 18px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--glass);
+      color: var(--fg);
+      font: inherit;
+      font-size: 1rem;
+      outline: none;
+    }
+    .answer input::placeholder { color: var(--muted); }
+    .answer input:focus { border-color: var(--fg); }
+    .answer button {
+      padding: 12px 22px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--fg);
+      color: var(--backdrop);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .answer button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Get roasted</h1>
-    <p class="lead">Tell us about yourself. We'll do the rest.</p>
+  <div class="aura-bg">
+    <div class="aura-layer-1" aria-hidden="true"></div>
+    <div class="aura-layer-2" aria-hidden="true"></div>
+    <div class="aura-layer-3" aria-hidden="true"></div>
 
-    <form id="profile-form">
-      <label>Name
-        <input id="name" name="name" maxlength="50" required autocomplete="given-name">
-      </label>
-      <label>Category
-        <select id="category" name="category" required>
-          <option value="sport">Sport</option>
-          <option value="politics">Politics</option>
-          <option value="career">Career</option>
-          <option value="music">Music</option>
-          <option value="technology">Technology</option>
-          <option value="food">Food</option>
-          <option value="school">School</option>
-          <option value="lifestyle">Lifestyle</option>
-          <option value="other">Other</option>
-        </select>
-      </label>
-      <label>Subcategory
-        <input id="subcategory" name="subcategory" maxlength="60" required list="subcategory-hints" placeholder="e.g. football, junior developer">
-        <datalist id="subcategory-hints"></datalist>
-      </label>
-      <label>Anything else (optional)
-        <textarea id="details" name="details" maxlength="500" placeholder="Habits, quirks, things you're known for"></textarea>
-      </label>
-      <label>Intensity
-        <select id="intensity" name="intensity">
-          <option value="mild">Mild</option>
-          <option value="medium" selected>Medium</option>
-          <option value="savage">Savage</option>
-        </select>
-      </label>
-      <div class="actions">
-        <button type="submit" class="secondary">Save</button>
-        <button type="button" id="roast" class="primary">Roast me</button>
-      </div>
-    </form>
-
-    <div id="status" role="status"></div>
-    <audio id="player" controls hidden></audio>
-  </main>
+    <main class="stage">
+      <button id="mic" class="mic" type="button" aria-pressed="false" aria-label="Start">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="3" width="6" height="11" rx="3"></rect>
+          <path d="M5 11a7 7 0 0 0 14 0"></path>
+          <line x1="12" y1="18" x2="12" y2="21"></line>
+          <line x1="9" y1="21" x2="15" y2="21"></line>
+        </svg>
+      </button>
+      <p id="status" class="status" role="status"></p>
+      <p id="text" class="text" aria-live="polite"></p>
+      <form id="answer-form" class="answer" autocomplete="off">
+        <input id="answer" type="text" maxlength="500" placeholder="Or type your answer" aria-label="Type your answer">
+        <button type="submit">Send</button>
+      </form>
+    </main>
+  </div>
 
   <script>
     const CLIENT_ID_KEY = "jarvis.clientId";
-    const HINTS = {
-      sport: ["football", "basketball", "F1", "tennis", "gym"],
-      politics: ["local council", "parliament", "online debates"],
-      career: ["junior developer", "sales", "manager", "student intern"],
-      music: ["drummer", "rapper", "karaoke", "playlist curator"],
-      technology: ["vim user", "gamer", "crypto", "ai enthusiast"],
-      food: ["home cook", "coffee snob", "pineapple pizza fan"],
-      school: ["final year", "group project", "night before exams"],
-      lifestyle: ["gym-goer", "early riser", "plant parent"],
-      other: []
-    };
+    const CATEGORIES = ["sport", "politics", "career", "music", "technology", "food", "school", "lifestyle", "other"];
+    const INTENSITIES = ["mild", "medium", "savage"];
+    const SPEECH_LANGUAGE = "en-KE";
+    const CALIBRATE_MS = 500;
+    const SPEECH_MULTIPLIER = 3;
+    const MIN_THRESHOLD = 0.02;
 
-    const form = document.getElementById("profile-form");
-    const roastButton = document.getElementById("roast");
+    function wordIn(text, words) {
+      return words.find((word) => new RegExp(`\\b${word}\\b`).test(text)) || null;
+    }
+
+    const QUESTIONS = [
+      {
+        key: "name",
+        ask: "Who are you? Speak up, nobody came here for silence.",
+        retry: "Seriously? I heard nothing. Try again.",
+        parse: (text) => text.replace(/[.!?]+$/, "").slice(0, 50)
+      },
+      {
+        key: "category",
+        ask: "What world do you embarrass yourself in? Sport, politics, career, music, technology, food, school, lifestyle, or other?",
+        retry: "That's not a category. Pick one from the list.",
+        parse: (text) => wordIn(text.toLowerCase(), CATEGORIES)
+      },
+      {
+        key: "subcategory",
+        ask: "Be specific. What exactly are you in that world? Don't say 'person'.",
+        retry: "Be specific. Try again.",
+        parse: (text) => text.replace(/[.!?]+$/, "").slice(0, 60)
+      },
+      {
+        key: "details",
+        ask: "Anything else I should know? Habits, quirks, the stuff you're known for. Say 'nothing' if you have none, which I doubt.",
+        retry: "Say something, or say nothing.",
+        parse: (text) => (/^(no|nope|nothing|none|n\/a)\b/i.test(text) ? "" : text.slice(0, 500))
+      },
+      {
+        key: "intensity",
+        ask: "How hard should I hit? Mild, medium, or savage?",
+        retry: "Mild, medium, or savage. Pick one.",
+        parse: (text) => wordIn(text.toLowerCase(), INTENSITIES)
+      }
+    ];
+
+    const micButton = document.getElementById("mic");
     const statusLine = document.getElementById("status");
-    const player = document.getElementById("player");
-    const categorySelect = document.getElementById("category");
-    const hints = document.getElementById("subcategory-hints");
+    const textLine = document.getElementById("text");
+    const answerForm = document.getElementById("answer-form");
+    const answerInput = document.getElementById("answer");
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    let active = false;
+    let step = 0;
+    let answers = {};
+    let heard = "";
+    let awaitingSpeech = false;
+    let askToken = 0;
 
     function clientId() {
       try {
@@ -119,86 +248,217 @@
       }
     }
 
-    const id = clientId();
-    const profileUrl = `/api/profiles/${id}`;
+    const profileUrl = `/api/profiles/${clientId()}`;
 
     function setStatus(message) {
       statusLine.textContent = message;
     }
 
-    function renderHints() {
-      hints.replaceChildren(...(HINTS[categorySelect.value] || []).map((hint) => {
-        const option = document.createElement("option");
-        option.value = hint;
-        return option;
-      }));
+    function setPressed(pressed) {
+      micButton.setAttribute("aria-pressed", String(pressed));
+      micButton.setAttribute("aria-label", pressed ? "Stop" : "Start");
     }
 
-    function fillForm(profile) {
-      document.getElementById("name").value = profile.name;
-      categorySelect.value = profile.category;
-      document.getElementById("subcategory").value = profile.subcategory;
-      document.getElementById("details").value = profile.details;
-      document.getElementById("intensity").value = profile.intensity;
-      renderHints();
-    }
+    let meter = null;
+    let meterWanted = false;
 
-    function formPayload() {
-      return {
-        name: document.getElementById("name").value,
-        category: categorySelect.value,
-        subcategory: document.getElementById("subcategory").value,
-        details: document.getElementById("details").value,
-        intensity: document.getElementById("intensity").value
+    async function startMeter() {
+      meterWanted = true;
+      if (meter || !navigator.mediaDevices) return;
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch {
+        return;
+      }
+      if (!meterWanted) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      const context = new AudioContext();
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 512;
+      context.createMediaStreamSource(stream).connect(analyser);
+      const samples = new Uint8Array(analyser.fftSize);
+      let frame = 0;
+
+      const tick = () => {
+        analyser.getByteTimeDomainData(samples);
+        let sum = 0;
+        for (const sample of samples) {
+          const value = (sample - 128) / 128;
+          sum += value * value;
+        }
+        const level = Math.min(1, Math.sqrt(sum / samples.length) * 4);
+        micButton.style.setProperty("--level", level.toFixed(3));
+        frame = requestAnimationFrame(tick);
+      };
+      tick();
+
+      meter = {
+        stop() {
+          cancelAnimationFrame(frame);
+          stream.getTracks().forEach((track) => track.stop());
+          context.close();
+        }
       };
     }
 
-    async function loadProfile() {
-      const response = await fetch(profileUrl);
-      if (response.status === 404) return;
-      if (!response.ok) throw new Error(`load failed: ${response.status}`);
-      fillForm(await response.json());
+    function stopMeter() {
+      meterWanted = false;
+      if (meter) {
+        meter.stop();
+        meter = null;
+      }
+      micButton.style.removeProperty("--level");
     }
 
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      setStatus("Saving...");
+    function pickVoice() {
+      const voices = speechSynthesis.getVoices();
+      return voices.find((voice) => voice.lang === "en-KE") || voices.find((voice) => voice.lang.startsWith("en")) || null;
+    }
+
+    function speak(text) {
+      return new Promise((resolve) => {
+        if (!("speechSynthesis" in window)) return resolve();
+        speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = SPEECH_LANGUAGE;
+        const voice = pickVoice();
+        if (voice) utterance.voice = voice;
+        utterance.onend = resolve;
+        utterance.onerror = resolve;
+        speechSynthesis.speak(utterance);
+      });
+    }
+
+    const recognition = Recognition ? new Recognition() : null;
+
+    function listen() {
+      if (!active) return;
+      heard = "";
+      awaitingSpeech = true;
+      setStatus("Listening...");
+      startMeter();
+      try {
+        recognition.start();
+      } catch {
+        // already listening
+      }
+    }
+
+    async function ask(retry) {
+      const token = ++askToken;
+      const question = QUESTIONS[step];
+      textLine.textContent = question.ask;
+      setStatus(retry ? question.retry : "");
+      await speak(retry ? `${question.retry} ${question.ask}` : question.ask);
+      if (token === askToken) listen();
+    }
+
+    function stopFlow(message) {
+      active = false;
+      stopMeter();
+      try {
+        recognition.abort();
+      } catch {
+        // not running
+      }
+      speechSynthesis?.cancel();
+      setPressed(false);
+      setStatus(message);
+    }
+
+    async function save() {
       const response = await fetch(profileUrl, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formPayload())
+        body: JSON.stringify(answers)
       });
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        setStatus(body.error || `Save failed (${response.status})`);
-        return;
+        return setStatus(body.error || `Save failed (${response.status})`);
       }
-      setStatus("Saved. Ready to roast you.");
-    });
+      setStatus("Profile saved.");
+    }
 
-    roastButton.addEventListener("click", async () => {
-      roastButton.disabled = true;
-      setStatus("Writing your roast...");
-      try {
-        const response = await fetch(`${profileUrl}/roast`, { method: "POST" });
-        if (!response.ok) {
-          const body = await response.json().catch(() => ({}));
-          setStatus(body.error || `Roast failed (${response.status})`);
-          return;
+    function finish() {
+      active = false;
+      stopMeter();
+      setPressed(false);
+      textLine.textContent = "Got you. Don't cry.";
+      setStatus("Saving...");
+      speak("Got you. Don't cry.");
+      save().catch((error) => setStatus(error.message));
+    }
+
+    function handleAnswer(text) {
+      const question = QUESTIONS[step];
+      const value = question.parse(text);
+      if (value === null) return ask(true);
+      answers[question.key] = value;
+      step += 1;
+      if (step < QUESTIONS.length) return ask(false);
+      finish();
+    }
+
+    function startFlow() {
+      active = true;
+      step = 0;
+      answers = {};
+      setPressed(true);
+      ask(false);
+    }
+
+    if (!recognition) {
+      micButton.disabled = true;
+      setStatus("Speech recognition needs Chrome or Edge.");
+    } else {
+      recognition.lang = SPEECH_LANGUAGE;
+      recognition.interimResults = false;
+      recognition.continuous = false;
+
+      recognition.addEventListener("result", (event) => {
+        heard = Array.from(event.results, (result) => result[0].transcript).join(" ").trim();
+      });
+
+      recognition.addEventListener("end", () => {
+        if (!awaitingSpeech) return;
+        awaitingSpeech = false;
+        stopMeter();
+        if (!active) return setPressed(false);
+        if (!heard) return ask(true);
+        handleAnswer(heard);
+      });
+
+      recognition.addEventListener("error", (event) => {
+        if (event.error === "no-speech" || event.error === "aborted") return;
+        stopFlow(event.error === "not-allowed" ? "Microphone access was denied." : `Voice error: ${event.error}`);
+      });
+
+      micButton.addEventListener("click", () => {
+        if (active) return stopFlow("Stopped. Tap the mic to start again.");
+        startFlow();
+      });
+
+      answerForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const typed = answerInput.value.trim();
+        if (!typed) return;
+        if (!active) return setStatus("Tap the mic to start first.");
+        answerInput.value = "";
+        awaitingSpeech = false;
+        try {
+          recognition.abort();
+        } catch {
+          // not running
         }
-        const blob = await response.blob();
-        player.src = URL.createObjectURL(blob);
-        player.hidden = false;
-        await player.play().catch(() => {});
-        setStatus("Here it is.");
-      } finally {
-        roastButton.disabled = false;
-      }
-    });
+        stopMeter();
+        handleAnswer(typed);
+      });
 
-    categorySelect.addEventListener("change", renderHints);
-    renderHints();
-    loadProfile().catch((error) => setStatus(error.message));
+      setStatus("Tap the mic to start, or type your answer.");
+    }
   </script>
 </body>
 </html>
