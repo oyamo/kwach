@@ -3,3 +3,5 @@
 kwach.exe
 /bin/
 CLAUDE.md
+!web/audio/
+!web/audio/*.mp3
