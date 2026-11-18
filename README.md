@@ -20,16 +20,19 @@ screens it with a safety model, converts it to speech, and stores profiles and c
 
 <table>
   <tr>
-    <td align="center" valign="middle" width="140" height="64"><img src="img/logo/go.svg" height="32" alt="Go"><br>Go</td>
-    <td align="center" valign="middle" width="140" height="64"><img src="img/logo/docker.svg" height="32" alt="Docker"><br>Docker</td>
-    <td align="center" valign="middle" width="140" height="64"><img src="img/logo/groq.svg" height="32" alt="Groq"><br>Groq</td>
-    <td align="center" valign="middle" width="140" height="64"><img src="https://eleven-public-cdn.elevenlabs.io/payloadcms/elevenlabs-official-logo.svg" height="32" alt="ElevenLabs"><br>ElevenLabs</td>
+    <td align="center" valign="middle" width="180" height="64"><img src="img/logo/go.svg" height="32" alt="Go"><br>Go</td>
+    <td align="center" valign="middle" width="180" height="64"><img src="img/logo/docker.svg" height="32" alt="Docker"><br>Docker</td>
+    <td align="center" valign="middle" width="180" height="64"><img src="img/logo/groq.svg" height="32" alt="Groq"><br>Groq</td>
   </tr>
   <tr>
-    <td align="center" valign="middle" width="140" height="64"><img src="img/logo/mongodb.svg" height="32" alt="MongoDB"><br>MongoDB</td>
-    <td align="center" valign="middle" width="140" height="64"><img src="img/logo/redis.svg" height="32" alt="Redis"><br>Redis</td>
-    <td align="center" valign="middle" width="140" height="64"><img src="img/logo/googlenews.svg" height="32" alt="Google News"><br>Google News</td>
-    <td align="center" valign="middle" width="140" height="64"><img src="img/logo/nginx.svg" height="32" alt="nginx"><br>nginx</td>
+    <td align="center" valign="middle" width="180" height="64"><img src="https://eleven-public-cdn.elevenlabs.io/payloadcms/elevenlabs-official-logo.svg" height="32" alt="ElevenLabs"><br>ElevenLabs</td>
+    <td align="center" valign="middle" width="180" height="64"><img src="img/logo/mongodb.svg" height="32" alt="MongoDB"><br>MongoDB</td>
+    <td align="center" valign="middle" width="180" height="64"><img src="img/logo/redis.svg" height="32" alt="Redis"><br>Redis</td>
+  </tr>
+  <tr>
+    <td align="center" valign="middle" width="180" height="64"><img src="img/logo/googlenews.svg" height="32" alt="Google News"><br>Google News</td>
+    <td align="center" valign="middle" width="180" height="64"><img src="img/logo/nginx.svg" height="32" alt="nginx"><br>nginx</td>
+    <td align="center" valign="middle" width="180" height="64"><img src="img/logo/codecov.png" height="24" alt="Codecov"><br>Codecov</td>
   </tr>
 </table>
 
