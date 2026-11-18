@@ -11,8 +11,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/oyamo/kwach?style=for-the-badge" alt="License"></a>
 </p>
 
-A Go service that generates a short roast from a user's profile and recent news,
-screens it with a safety model, converts it to speech, and stores profiles and chat history for context.
+kwach is an AI harness for voice roasts. It builds a prompt from a user's profile and recent headlines, checks the generated script with a guard model, then turns it into speech. The chat and guard models use the OpenAI API format, so you can switch providers with config. Profiles live in MongoDB and chat history in Redis. The front end runs the intake interview by voice.
 
 <p align="center">
   <img src="img/screenshot.png" alt="kwach interview screen">
