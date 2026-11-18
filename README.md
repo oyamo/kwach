@@ -11,10 +11,20 @@ screens it with a safety model, converts it to speech, and stores profiles and c
 
 ## Technology
 
-| | | | |
-|---|---|---|---|
-| <img src="img/logo/go.svg" width="40" alt="Go"> Go | <img src="img/logo/docker.svg" width="40" alt="Docker"> Docker | <img src="img/logo/groq.svg" height="24" alt="Groq"> Groq | <img src="https://eleven-public-cdn.elevenlabs.io/payloadcms/elevenlabs-official-logo.svg" width="110" alt="ElevenLabs"> ElevenLabs |
-| <img src="img/logo/mongodb.svg" width="40" alt="MongoDB"> MongoDB | <img src="img/logo/redis.svg" width="40" alt="Redis"> Redis | <img src="img/logo/googlenews.svg" width="40" alt="Google News"> Google News | <img src="img/logo/nginx.svg" width="40" alt="nginx"> nginx |
+<table>
+  <tr>
+    <td valign="bottom"><img src="img/logo/go.svg" width="40" alt="Go"><br>Go</td>
+    <td valign="bottom"><img src="img/logo/docker.svg" width="40" alt="Docker"><br>Docker</td>
+    <td valign="bottom"><img src="img/logo/groq.svg" height="24" alt="Groq"><br>Groq</td>
+    <td valign="bottom"><img src="https://eleven-public-cdn.elevenlabs.io/payloadcms/elevenlabs-official-logo.svg" width="110" alt="ElevenLabs"><br>ElevenLabs</td>
+  </tr>
+  <tr>
+    <td valign="bottom"><img src="img/logo/mongodb.svg" width="40" alt="MongoDB"><br>MongoDB</td>
+    <td valign="bottom"><img src="img/logo/redis.svg" width="40" alt="Redis"><br>Redis</td>
+    <td valign="bottom"><img src="img/logo/googlenews.svg" width="40" alt="Google News"><br>Google News</td>
+    <td valign="bottom"><img src="img/logo/nginx.svg" width="40" alt="nginx"><br>nginx</td>
+  </tr>
+</table>
 
 ## Quick start
 
