@@ -37,16 +37,11 @@ screens it with a safety model, converts it to speech, and stores profiles and c
 
 ## Run
 
-Build the binary and provide the configuration through the environment: your service manager, secret store, or container runtime. Never use the placeholder values in `configs/.env.example` for a real deployment.
-
 ```sh
 go build -o kwach ./cmd/kwach
-./kwach serve   # JSON API on HTTP_ADDR (default :8080)
+./kwach serve
+./kwach narrate "your prompt" -out roast.mp3
 ```
-
-The app reads only environment variables. See [`configs/.env.example`](configs/.env.example) for the full list of names. The front-end in `web/static/` is served by nginx.
-
-For a one-off roast from the command line: `./kwach narrate "your prompt" -out roast.mp3`.
 
 ## Docker
 
@@ -58,8 +53,6 @@ docker run --rm -p 8080:8080 \
   -e GROQ_API_KEY -e ELEVENLABS_API_KEY -e ELEVENLABS_VOICE_ID -e MONGODB_URI -e REDIS_ADDR \
   kwach
 ```
-
-The `-e NAME` flags pass values from your shell. The image is a static binary on distroless, runs as UID 65532, has no shell, and pins its base images by digest.
 
 ## Development
 
