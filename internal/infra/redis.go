@@ -12,12 +12,23 @@ type Redis struct {
 }
 
 func ConnectRedis(ctx context.Context, addr, password string, db int) (*Redis, error) {
-	client := redis.NewClient(&redis.Options{
+	return connect(ctx, &redis.Options{
 		Addr:     addr,
 		Password: password,
 		DB:       db,
 	})
+}
 
+func ConnectRedisURL(ctx context.Context, rawURL string) (*Redis, error) {
+	options, err := redis.ParseURL(rawURL)
+	if err != nil {
+		return nil, fmt.Errorf("infra: parse redis url: %w", err)
+	}
+	return connect(ctx, options)
+}
+
+func connect(ctx context.Context, options *redis.Options) (*Redis, error) {
+	client := redis.NewClient(options)
 	if err := client.Ping(ctx).Err(); err != nil {
 		_ = client.Close()
 		return nil, fmt.Errorf("infra: redis ping: %w", err)

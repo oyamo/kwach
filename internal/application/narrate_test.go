@@ -15,12 +15,12 @@ func TestNarrateChainsScriptIntoSpeech(t *testing.T) {
 	generate := func(_ context.Context, prompt string) (string, error) {
 		return "script for " + prompt, nil
 	}
-	synthesize := func(_ context.Context, text string) (domain.Audio, error) {
+	synthesize := func(_ context.Context, _, text string) (domain.Audio, error) {
 		return domain.Audio{ContentType: "audio/mpeg", Data: []byte(text)}, nil
 	}
 
 	narrator := NewNarrator(generate, passModeration, synthesize, slog.New(slog.DiscardHandler))
-	narration, err := narrator.Narrate(t.Context(), "  cats  ")
+	narration, err := narrator.Narrate(t.Context(), "  cats  ", "voice-1")
 	if err != nil {
 		t.Fatalf("Narrate() error = %v", err)
 	}
@@ -85,13 +85,13 @@ func TestNarrateStopsOnFailure(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			synthesizeCalled := false
-			synthesize := func(context.Context, string) (domain.Audio, error) {
+			synthesize := func(context.Context, string, string) (domain.Audio, error) {
 				synthesizeCalled = true
 				return domain.Audio{}, nil
 			}
 
 			narrator := NewNarrator(tt.generate, tt.moderate, synthesize, slog.New(slog.DiscardHandler))
-			_, err := narrator.Narrate(t.Context(), tt.prompt)
+			_, err := narrator.Narrate(t.Context(), tt.prompt, "voice-1")
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("Narrate() error = %v, want %v", err, tt.wantErr)
 			}

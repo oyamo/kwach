@@ -25,11 +25,13 @@ func newTestRoutes(t *testing.T) (http.Handler, map[string]domain.Profile) {
 
 	generate := func(context.Context, string) (string, error) { return "script", nil }
 	passAll := func(context.Context, string) (bool, error) { return true, nil }
-	synthesize := func(context.Context, string) (domain.Audio, error) {
+	synthesize := func(context.Context, string, string) (domain.Audio, error) {
 		return domain.Audio{ContentType: "audio/mpeg", Data: []byte("mp3-bytes")}, nil
 	}
 
 	ports := application.Ports{
+		VoiceIDs:       []string{"voice-a"},
+		SaveVoiceIndex: func(context.Context, string, int) error { return nil },
 		StoreProfile: func(_ context.Context, profile domain.Profile) error {
 			store[profile.ClientID] = profile
 			return nil

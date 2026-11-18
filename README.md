@@ -56,7 +56,7 @@ docker build -t kwach .
 docker run --rm -p 8080:8080 \
   --read-only --cap-drop=ALL --security-opt=no-new-privileges:true \
   --pids-limit=100 --memory=256m \
-  -e GROQ_API_KEY -e ELEVENLABS_API_KEY -e ELEVENLABS_VOICE_ID -e MONGODB_URI -e REDIS_ADDR \
+  -e OPENAI_BASE_URL -e OPENAI_API_KEY -e OPENAI_MODEL -e ELEVENLABS_API_KEY -e ELEVENLABS_VOICE_IDS -e MONGODB_URI -e REDIS_URL \
   kwach
 ```
 

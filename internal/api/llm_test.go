@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -10,22 +11,38 @@ import (
 
 func serveContent(content string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = io.WriteString(w, `{"choices":[{"message":{"role":"assistant","content":"`+content+`"}}]}`)
+		w.Header().Set("Content-Type", "application/json")
+		body, _ := json.Marshal(map[string]any{
+			"id":      "1",
+			"object":  "chat.completion",
+			"created": 0,
+			"model":   "m",
+			"choices": []map[string]any{{
+				"index":         0,
+				"finish_reason": "stop",
+				"message":       map[string]string{"role": "assistant", "content": content},
+			}},
+		})
+		_, _ = w.Write(body)
 	}))
 }
 
-func TestCompleteReturnsTrimmedContent(t *testing.T) {
+func TestCompleteSendsOpenAIRequestAndReturnsTrimmedContent(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/chat/completions" {
+			http.Error(w, "wrong path: "+r.URL.Path, http.StatusNotFound)
+			return
+		}
 		if got := r.Header.Get("Authorization"); got != "Bearer test-key" {
 			http.Error(w, "bad auth: "+got, http.StatusUnauthorized)
 			return
 		}
-		_, _ = io.WriteString(w, `{"choices":[{"message":{"role":"assistant","content":"  Hello there.  "}}]}`)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"id":"1","object":"chat.completion","created":0,"model":"test-model","choices":[{"index":0,"finish_reason":"stop","message":{"role":"assistant","content":"  Hello there.  "}}]}`)
 	}))
 	defer server.Close()
 
-	client := NewGroqClient("test-key", "test-model")
-	client.baseURL = server.URL
+	client := NewChatClient(server.URL+"/v1", "test-key", "test-model")
 
 	got, err := client.Complete(t.Context(), "say hello")
 	if err != nil {
@@ -44,21 +61,21 @@ func TestCompleteErrors(t *testing.T) {
 		wantErr error
 	}{
 		{name: "non-200 status", status: http.StatusBadRequest, body: "bad request"},
-		{name: "no choices", status: http.StatusOK, body: `{"choices":[]}`, wantErr: ErrGroqNoContent},
-		{name: "blank content", status: http.StatusOK, body: `{"choices":[{"message":{"content":"   "}}]}`, wantErr: ErrGroqNoContent},
+		{name: "no choices", status: http.StatusOK, body: `{"id":"1","choices":[]}`, wantErr: ErrChatNoContent},
+		{name: "blank content", status: http.StatusOK, body: `{"id":"1","choices":[{"message":{"role":"assistant","content":"   "}}]}`, wantErr: ErrChatNoContent},
 		{name: "invalid json", status: http.StatusOK, body: `not json`},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.status)
 				_, _ = io.WriteString(w, tt.body)
 			}))
 			defer server.Close()
 
-			client := NewGroqClient("test-key", "test-model")
-			client.baseURL = server.URL
+			client := NewChatClient(server.URL+"/v1", "test-key", "test-model")
 
 			_, err := client.Complete(t.Context(), "prompt")
 			if err == nil {
@@ -79,8 +96,8 @@ func TestModerateVerdicts(t *testing.T) {
 		wantErr  error
 	}{
 		{name: "safe", content: "safe", wantSafe: true},
-		{name: "unsafe with category", content: "unsafe\\nS1", wantSafe: false},
-		{name: "unexpected answer", content: "maybe", wantErr: ErrGroqUnexpectedVerdict},
+		{name: "unsafe with category", content: "unsafe\nS1", wantSafe: false},
+		{name: "unexpected answer", content: "maybe", wantErr: ErrChatUnexpectedVerdict},
 	}
 
 	for _, tt := range tests {
@@ -88,8 +105,7 @@ func TestModerateVerdicts(t *testing.T) {
 			server := serveContent(tt.content)
 			defer server.Close()
 
-			client := NewGroqClient("test-key", "guard-model")
-			client.baseURL = server.URL
+			client := NewChatClient(server.URL+"/v1", "test-key", "guard-model")
 
 			safe, err := client.Moderate(t.Context(), "some script")
 			if tt.wantErr != nil {

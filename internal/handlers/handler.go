@@ -25,6 +25,7 @@ type Handler struct {
 	logger        *slog.Logger
 	clientLimiter *limiter
 	ipLimiter     *limiter
+	allowedOrigin string
 }
 
 type profileInput struct {
@@ -62,7 +63,7 @@ func (h Handler) Routes() http.Handler {
 	mux.HandleFunc("PUT /api/profiles/{clientID}", h.saveProfile)
 	mux.HandleFunc("POST /api/profiles/{clientID}/roast", h.limitRoasts(h.roast))
 	mux.HandleFunc("DELETE /api/profiles/{clientID}/history", h.clearHistory)
-	return h.logRequests(mux)
+	return h.withCORS(h.logRequests(mux))
 }
 
 func (h Handler) clearHistory(w http.ResponseWriter, r *http.Request) {

@@ -75,7 +75,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		}
 	}()
 
-	redisConn, err := infra.ConnectRedis(ctx, cfg.RedisAddr, cfg.RedisPassword, redisDB)
+	redisConn, err := connectRedis(ctx, cfg)
 	if err != nil {
 		return err
 	}
@@ -98,12 +98,14 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		LoadHistory:    history.Load,
 		AppendHistory:  history.Append,
 		ClearHistory:   history.Clear,
+		VoiceIDs:       cfg.ElevenLabsVoiceIDs,
+		SaveVoiceIndex: profiles.SaveVoiceIndex,
 	}
 	roaster := application.NewRoaster(newNarrator(cfg, logger), ports, logger)
 
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr,
-		Handler:           handlers.NewHandler(roaster, logger).Routes(),
+		Handler:           handlers.NewHandler(roaster, logger).WithAllowedOrigin(cfg.CORSOrigin).Routes(),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      3 * time.Minute,
@@ -135,7 +137,7 @@ func narrate(ctx context.Context, cfg config.Config, logger *slog.Logger, args [
 		return err
 	}
 
-	narration, err := newNarrator(cfg, logger).Narrate(ctx, strings.Join(flags.Args(), " "))
+	narration, err := newNarrator(cfg, logger).Narrate(ctx, strings.Join(flags.Args(), " "), cfg.ElevenLabsVoiceIDs[0])
 	if err != nil {
 		return err
 	}
@@ -147,8 +149,15 @@ func narrate(ctx context.Context, cfg config.Config, logger *slog.Logger, args [
 }
 
 func newNarrator(cfg config.Config, logger *slog.Logger) application.Narrator {
-	chat := api.NewGroqClient(cfg.GroqAPIKey, cfg.GroqModel)
-	guard := api.NewGroqClient(cfg.GroqAPIKey, cfg.GroqGuardModel)
-	voice := api.NewElevenLabsClient(cfg.ElevenLabsAPIKey, cfg.ElevenLabsVoiceID, cfg.ElevenLabsModelID, cfg.ElevenLabsFormat)
+	chat := api.NewChatClient(cfg.OpenAIBaseURL, cfg.OpenAIAPIKey, cfg.OpenAIModel)
+	guard := api.NewChatClient(cfg.OpenAIBaseURL, cfg.OpenAIAPIKey, cfg.OpenAIGuardModel)
+	voice := api.NewElevenLabsClient(cfg.ElevenLabsAPIKey, cfg.ElevenLabsModelID, cfg.ElevenLabsFormat)
 	return application.NewNarrator(chat.Complete, guard.Moderate, voice.Synthesize, logger)
+}
+
+func connectRedis(ctx context.Context, cfg config.Config) (*infra.Redis, error) {
+	if cfg.RedisURL != "" {
+		return infra.ConnectRedisURL(ctx, cfg.RedisURL)
+	}
+	return infra.ConnectRedis(ctx, cfg.RedisAddr, cfg.RedisPassword, redisDB)
 }

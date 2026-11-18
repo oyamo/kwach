@@ -2,8 +2,10 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"math/rand/v2"
 	"strings"
 	"time"
 
@@ -31,6 +33,10 @@ type AppendHistory func(ctx context.Context, clientID string, messages []domain.
 
 type ClearHistory func(ctx context.Context, clientID string) error
 
+var ErrNoVoices = errors.New("no voice IDs configured")
+
+type SaveVoiceIndex func(ctx context.Context, clientID string, index int) error
+
 type Ports struct {
 	StoreProfile   StoreProfile
 	LoadProfile    LoadProfile
@@ -38,6 +44,8 @@ type Ports struct {
 	LoadHistory    LoadHistory
 	AppendHistory  AppendHistory
 	ClearHistory   ClearHistory
+	VoiceIDs       []string
+	SaveVoiceIndex SaveVoiceIndex
 }
 
 type Roaster struct {
@@ -94,9 +102,13 @@ func (r Roaster) Roast(ctx context.Context, clientID string) (domain.Audio, erro
 		return domain.Audio{}, fmt.Errorf("roast: %w", err)
 	}
 
+	voiceID, err := r.voiceFor(ctx, profile)
+	if err != nil {
+		return domain.Audio{}, fmt.Errorf("roast: %w", err)
+	}
 	headlines := r.currentHeadlines(ctx, profile)
 	history := r.recentHistory(ctx, clientID)
-	narration, err := r.narrator.Narrate(ctx, roastPrompt(profile, headlines, history))
+	narration, err := r.narrator.Narrate(ctx, roastPrompt(profile, headlines, history), voiceID)
 	if err != nil {
 		return domain.Audio{}, fmt.Errorf("roast: %w", err)
 	}
@@ -109,6 +121,20 @@ func (r Roaster) Roast(ctx context.Context, clientID string) (domain.Audio, erro
 		"history", len(history),
 	)
 	return narration.Audio, nil
+}
+
+func (r Roaster) voiceFor(ctx context.Context, profile domain.Profile) (string, error) {
+	if len(r.ports.VoiceIDs) == 0 {
+		return "", ErrNoVoices
+	}
+	if index := profile.VoiceIndex; index != nil && *index >= 0 && *index < len(r.ports.VoiceIDs) {
+		return r.ports.VoiceIDs[*index], nil
+	}
+	index := rand.IntN(len(r.ports.VoiceIDs))
+	if err := r.ports.SaveVoiceIndex(ctx, profile.ClientID, index); err != nil {
+		return "", fmt.Errorf("save voice index: %w", err)
+	}
+	return r.ports.VoiceIDs[index], nil
 }
 
 func (r Roaster) currentHeadlines(ctx context.Context, profile domain.Profile) []domain.Headline {

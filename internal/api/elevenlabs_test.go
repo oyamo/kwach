@@ -41,10 +41,10 @@ func TestSynthesizeSendsRequestAndReturnsAudio(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewElevenLabsClient("test-key", "voice-123", "model-x", "mp3_44100_128")
+	client := NewElevenLabsClient("test-key", "model-x", "mp3_44100_128")
 	client.baseURL = server.URL
 
-	audio, err := client.Synthesize(t.Context(), "hello world")
+	audio, err := client.Synthesize(t.Context(), "voice-123", "hello world")
 	if err != nil {
 		t.Fatalf("Synthesize() error = %v", err)
 	}
@@ -62,10 +62,10 @@ func TestSynthesizeNonOKStatusIsError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewElevenLabsClient("test-key", "voice-123", "model-x", "mp3_44100_128")
+	client := NewElevenLabsClient("test-key", "model-x", "mp3_44100_128")
 	client.baseURL = server.URL
 
-	if _, err := client.Synthesize(t.Context(), "hello"); err == nil {
+	if _, err := client.Synthesize(t.Context(), "voice-123", "hello"); err == nil {
 		t.Fatal("Synthesize() error = nil, want error")
 	}
 }

@@ -13,7 +13,7 @@ type GenerateText func(ctx context.Context, prompt string) (string, error)
 
 type ModerateText func(ctx context.Context, text string) (bool, error)
 
-type SynthesizeSpeech func(ctx context.Context, text string) (domain.Audio, error)
+type SynthesizeSpeech func(ctx context.Context, voiceID, text string) (domain.Audio, error)
 
 type Narrator struct {
 	generateText     GenerateText
@@ -36,7 +36,7 @@ func NewNarrator(
 	}
 }
 
-func (n Narrator) Narrate(ctx context.Context, prompt string) (domain.Narration, error) {
+func (n Narrator) Narrate(ctx context.Context, prompt, voiceID string) (domain.Narration, error) {
 	validPrompt, err := domain.ValidatePrompt(prompt)
 	if err != nil {
 		return domain.Narration{}, fmt.Errorf("narrate: %w", err)
@@ -62,7 +62,7 @@ func (n Narrator) Narrate(ctx context.Context, prompt string) (domain.Narration,
 	}
 
 	speechStarted := time.Now()
-	audio, err := n.synthesizeSpeech(ctx, script)
+	audio, err := n.synthesizeSpeech(ctx, voiceID, script)
 	if err != nil {
 		return domain.Narration{}, fmt.Errorf("narrate: synthesize speech: %w", err)
 	}

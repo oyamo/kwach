@@ -30,7 +30,7 @@ func (f *fakeStore) narrator() Narrator {
 		f.prompts = append(f.prompts, prompt)
 		return "roast script", nil
 	}
-	synthesize := func(_ context.Context, text string) (domain.Audio, error) {
+	synthesize := func(_ context.Context, _, text string) (domain.Audio, error) {
 		return domain.Audio{ContentType: "audio/mpeg", Data: []byte(text)}, nil
 	}
 	return NewNarrator(generate, passModeration, synthesize, slog.New(slog.DiscardHandler))
@@ -50,6 +50,13 @@ func (f *fakeStore) ports() Ports {
 			return profile, nil
 		},
 		FetchHeadlines: fetchHeadlines,
+		VoiceIDs:       []string{"voice-a", "voice-b"},
+		SaveVoiceIndex: func(_ context.Context, clientID string, index int) error {
+			profile := f.profiles[clientID]
+			profile.VoiceIndex = &index
+			f.profiles[clientID] = profile
+			return nil
+		},
 		LoadHistory: func(_ context.Context, clientID string) ([]domain.Message, error) {
 			return f.history[clientID], nil
 		},

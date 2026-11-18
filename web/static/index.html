@@ -150,6 +150,13 @@
       cursor: pointer;
     }
     .answer button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+    .text.thinking {
+      animation: think-glow 1.6s ease-in-out infinite;
+    }
+    @keyframes think-glow {
+      0%, 100% { text-shadow: 0 0 6px rgba(255, 255, 255, 0.2); }
+      50% { text-shadow: 0 0 28px rgba(255, 255, 255, 0.9), 0 0 60px rgba(255, 255, 255, 0.5); }
+    }
   </style>
 </head>
 <body>
@@ -184,6 +191,7 @@
     const CALIBRATE_MS = 500;
     const SPEECH_MULTIPLIER = 3;
     const MIN_THRESHOLD = 0.02;
+    const THINK_CLIPS = ["think1.mp3", "think2.mp3", "think3.mp3"];
 
     function wordIn(text, words) {
       return words.find((word) => new RegExp(`\\b${word}\\b`).test(text)) || null;
@@ -248,7 +256,8 @@
       }
     }
 
-    const profileUrl = `/api/profiles/${clientId()}`;
+    const API_BASE = "http://localhost:5000";
+    const profileUrl = `${API_BASE}/api/profiles/${clientId()}`;
 
     function setStatus(message) {
       statusLine.textContent = message;
@@ -313,23 +322,28 @@
       micButton.style.removeProperty("--level");
     }
 
-    function pickVoice() {
-      const voices = speechSynthesis.getVoices();
-      return voices.find((voice) => voice.lang === "en-KE") || voices.find((voice) => voice.lang.startsWith("en")) || null;
+    let clipPlayer = null;
+
+    function playClip(file) {
+      return new Promise((resolve) => {
+        const audio = new Audio(`audio/${file}`);
+        clipPlayer = audio;
+        const done = () => {
+          if (clipPlayer === audio) clipPlayer = null;
+          resolve();
+        };
+        audio.onended = done;
+        audio.onerror = done;
+        audio.onpause = done;
+        audio.play().catch(done);
+      });
     }
 
-    function speak(text) {
-      return new Promise((resolve) => {
-        if (!("speechSynthesis" in window)) return resolve();
-        speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = SPEECH_LANGUAGE;
-        const voice = pickVoice();
-        if (voice) utterance.voice = voice;
-        utterance.onend = resolve;
-        utterance.onerror = resolve;
-        speechSynthesis.speak(utterance);
-      });
+    async function speak(files, token) {
+      for (const file of files) {
+        if (token !== askToken) return;
+        await playClip(file);
+      }
     }
 
     const recognition = Recognition ? new Recognition() : null;
@@ -352,7 +366,8 @@
       const question = QUESTIONS[step];
       textLine.textContent = question.ask;
       setStatus(retry ? question.retry : "");
-      await speak(retry ? `${question.retry} ${question.ask}` : question.ask);
+      const n = step + 1;
+      await speak(retry ? [`r${n}.mp3`, `q${n}.mp3`] : [`q${n}.mp3`], token);
       if (token === askToken) listen();
     }
 
@@ -364,7 +379,9 @@
       } catch {
         // not running
       }
-      speechSynthesis?.cancel();
+      askToken++;
+      clipPlayer?.pause();
+      clipPlayer = null;
       setPressed(false);
       setStatus(message);
     }
@@ -375,11 +392,63 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(answers)
       });
+      if (response.status === 500) {
+        blameUser();
+        return false;
+      }
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        return setStatus(body.error || `Save failed (${response.status})`);
+        setStatus(body.error || `Save failed (${response.status})`);
+        return false;
       }
       setStatus("Profile saved.");
+      return true;
+    }
+
+    function blameUser() {
+      clipPlayer?.pause();
+      textLine.textContent = "The server gave up on you. Bold move.";
+      setStatus("Internal server error. Congratulations, you broke a server. That's a talent.");
+      playClip("error.mp3");
+    }
+
+    async function roast() {
+      micButton.disabled = true;
+      setStatus("");
+      textLine.textContent = "Let me think...";
+      textLine.classList.add("thinking");
+      playClip(THINK_CLIPS[Math.floor(Math.random() * THINK_CLIPS.length)]);
+      try {
+        const response = await fetch(`${profileUrl}/roast`, { method: "POST" });
+        if (response.status === 500) {
+          blameUser();
+          return;
+        }
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          setStatus(body.error || `Roast failed (${response.status})`);
+          return;
+        }
+        const audio = new Audio(URL.createObjectURL(await response.blob()));
+        textLine.textContent = "";
+        try {
+          await audio.play();
+          setStatus("Here it is.");
+        } catch {
+          setStatus("Tap anywhere to hear your roast.");
+          document.addEventListener("click", () => audio.play(), { once: true });
+        }
+      } catch (error) {
+        setStatus(error.message);
+      } finally {
+        textLine.classList.remove("thinking");
+        micButton.disabled = false;
+      }
+    }
+
+    async function resume() {
+      const response = await fetch(profileUrl).catch(() => null);
+      if (response?.ok) roast();
     }
 
     function finish() {
@@ -388,8 +457,10 @@
       setPressed(false);
       textLine.textContent = "Got you. Don't cry.";
       setStatus("Saving...");
-      speak("Got you. Don't cry.");
-      save().catch((error) => setStatus(error.message));
+      playClip("done.mp3");
+      save()
+        .then((saved) => saved && roast())
+        .catch((error) => setStatus(error.message));
     }
 
     function handleAnswer(text) {
@@ -459,6 +530,7 @@
 
       setStatus("Tap the mic to start, or type your answer.");
     }
+    resume();
   </script>
 </body>
 </html>

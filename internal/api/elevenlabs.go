@@ -26,17 +26,15 @@ var ErrElevenLabsAudioTooLarge = errors.New("elevenlabs: audio exceeds maximum s
 
 type ElevenLabsClient struct {
 	apiKey       string
-	voiceID      string
 	modelID      string
 	outputFormat string
 	baseURL      string
 	http         *http.Client
 }
 
-func NewElevenLabsClient(apiKey, voiceID, modelID, outputFormat string) *ElevenLabsClient {
+func NewElevenLabsClient(apiKey, modelID, outputFormat string) *ElevenLabsClient {
 	return &ElevenLabsClient{
 		apiKey:       apiKey,
-		voiceID:      voiceID,
 		modelID:      modelID,
 		outputFormat: outputFormat,
 		baseURL:      elevenLabsBaseURL,
@@ -57,7 +55,7 @@ type voiceSettings struct {
 	UseSpeakerBoost bool    `json:"use_speaker_boost"`
 }
 
-func (c *ElevenLabsClient) Synthesize(ctx context.Context, text string) (domain.Audio, error) {
+func (c *ElevenLabsClient) Synthesize(ctx context.Context, voiceID, text string) (domain.Audio, error) {
 	payload, err := json.Marshal(speechRequest{
 		Text:    text,
 		ModelID: c.modelID,
@@ -73,7 +71,7 @@ func (c *ElevenLabsClient) Synthesize(ctx context.Context, text string) (domain.
 	}
 
 	endpoint := fmt.Sprintf("%s/v1/text-to-speech/%s?output_format=%s",
-		c.baseURL, url.PathEscape(c.voiceID), url.QueryEscape(c.outputFormat))
+		c.baseURL, url.PathEscape(voiceID), url.QueryEscape(c.outputFormat))
 
 	resp, err := tools.Do(ctx, c.http, func(ctx context.Context) (*http.Request, error) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))

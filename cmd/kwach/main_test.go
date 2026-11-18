@@ -7,9 +7,10 @@ import (
 
 func setRequiredEnv(t *testing.T) {
 	t.Helper()
-	t.Setenv("GROQ_API_KEY", "groq-test-key")
+	t.Setenv("OPENAI_API_KEY", "test-key")
+	t.Setenv("OPENAI_MODEL", "test-model")
 	t.Setenv("ELEVENLABS_API_KEY", "eleven-test-key")
-	t.Setenv("ELEVENLABS_VOICE_ID", "voice-test")
+	t.Setenv("ELEVENLABS_VOICE_IDS", "voice-test")
 	t.Setenv("MONGODB_URI", "mongodb://localhost:27017")
 }
 
@@ -28,9 +29,9 @@ func TestRunRejectsUnknownCommand(t *testing.T) {
 }
 
 func TestRunFailsWithoutConfig(t *testing.T) {
-	t.Setenv("GROQ_API_KEY", "")
+	t.Setenv("OPENAI_API_KEY", "")
 	t.Setenv("ELEVENLABS_API_KEY", "")
-	t.Setenv("ELEVENLABS_VOICE_ID", "")
+	t.Setenv("ELEVENLABS_VOICE_IDS", "")
 	t.Setenv("MONGODB_URI", "")
 
 	if err := run([]string{"serve"}); err == nil {
