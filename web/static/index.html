@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jarvis Roast</title>
+  <style>
+    :root {
+      --bg: #f6f5f2; --fg: #1d1c1a; --muted: #6b6861; --card: #ffffff;
+      --accent: #d6402b; --border: #d9d6cf;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #161514; --fg: #f1efea; --muted: #a09c93; --card: #201f1d;
+        --accent: #ff6b57; --border: #3a3834;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #161514; --fg: #f1efea; --muted: #a09c93; --card: #201f1d;
+      --accent: #ff6b57; --border: #3a3834;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; }
+    main { max-width: 480px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 1.6rem; margin: 16px 0 4px; }
+    p.lead { color: var(--muted); margin: 0 0 16px; }
+    form { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: grid; gap: 12px; }
+    label { display: grid; gap: 4px; font-size: 0.9rem; color: var(--muted); }
+    input, select, textarea {
+      font: inherit; color: var(--fg); background: var(--bg);
+      border: 1px solid var(--border); border-radius: 8px; padding: 10px; width: 100%;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    button { font: inherit; border: 0; border-radius: 8px; padding: 12px 16px; cursor: pointer; }
+    button.primary { background: var(--accent); color: #fff; flex: 1; }
+    button.secondary { background: transparent; color: var(--fg); border: 1px solid var(--border); flex: 1; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #status { min-height: 1.2em; color: var(--muted); font-size: 0.9rem; margin: 12px 0; }
+    audio { width: 100%; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Get roasted</h1>
+    <p class="lead">Tell us about yourself. We'll do the rest.</p>
+
+    <form id="profile-form">
+      <label>Name
+        <input id="name" name="name" maxlength="50" required autocomplete="given-name">
+      </label>
+      <label>Category
+        <select id="category" name="category" required>
+          <option value="sport">Sport</option>
+          <option value="politics">Politics</option>
+          <option value="career">Career</option>
+          <option value="music">Music</option>
+          <option value="technology">Technology</option>
+          <option value="food">Food</option>
+          <option value="school">School</option>
+          <option value="lifestyle">Lifestyle</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label>Subcategory
+        <input id="subcategory" name="subcategory" maxlength="60" required list="subcategory-hints" placeholder="e.g. football, junior developer">
+        <datalist id="subcategory-hints"></datalist>
+      </label>
+      <label>Anything else (optional)
+        <textarea id="details" name="details" maxlength="500" placeholder="Habits, quirks, things you're known for"></textarea>
+      </label>
+      <label>Intensity
+        <select id="intensity" name="intensity">
+          <option value="mild">Mild</option>
+          <option value="medium" selected>Medium</option>
+          <option value="savage">Savage</option>
+        </select>
+      </label>
+      <div class="actions">
+        <button type="submit" class="secondary">Save</button>
+        <button type="button" id="roast" class="primary">Roast me</button>
+      </div>
+    </form>
+
+    <div id="status" role="status"></div>
+    <audio id="player" controls hidden></audio>
+  </main>
+
+  <script>
+    const CLIENT_ID_KEY = "jarvis.clientId";
+    const HINTS = {
+      sport: ["football", "basketball", "F1", "tennis", "gym"],
+      politics: ["local council", "parliament", "online debates"],
+      career: ["junior developer", "sales", "manager", "student intern"],
+      music: ["drummer", "rapper", "karaoke", "playlist curator"],
+      technology: ["vim user", "gamer", "crypto", "ai enthusiast"],
+      food: ["home cook", "coffee snob", "pineapple pizza fan"],
+      school: ["final year", "group project", "night before exams"],
+      lifestyle: ["gym-goer", "early riser", "plant parent"],
+      other: []
+    };
+
+    const form = document.getElementById("profile-form");
+    const roastButton = document.getElementById("roast");
+    const statusLine = document.getElementById("status");
+    const player = document.getElementById("player");
+    const categorySelect = document.getElementById("category");
+    const hints = document.getElementById("subcategory-hints");
+
+    function clientId() {
+      try {
+        const stored = localStorage.getItem(CLIENT_ID_KEY);
+        if (stored) return stored;
+        const created = crypto.randomUUID();
+        localStorage.setItem(CLIENT_ID_KEY, created);
+        return created;
+      } catch {
+        return crypto.randomUUID();
+      }
+    }
+
+    const id = clientId();
+    const profileUrl = `/api/profiles/${id}`;
+
+    function setStatus(message) {
+      statusLine.textContent = message;
+    }
+
+    function renderHints() {
+      hints.replaceChildren(...(HINTS[categorySelect.value] || []).map((hint) => {
+        const option = document.createElement("option");
+        option.value = hint;
+        return option;
+      }));
+    }
+
+    function fillForm(profile) {
+      document.getElementById("name").value = profile.name;
+      categorySelect.value = profile.category;
+      document.getElementById("subcategory").value = profile.subcategory;
+      document.getElementById("details").value = profile.details;
+      document.getElementById("intensity").value = profile.intensity;
+      renderHints();
+    }
+
+    function formPayload() {
+      return {
+        name: document.getElementById("name").value,
+        category: categorySelect.value,
+        subcategory: document.getElementById("subcategory").value,
+        details: document.getElementById("details").value,
+        intensity: document.getElementById("intensity").value
+      };
+    }
+
+    async function loadProfile() {
+      const response = await fetch(profileUrl);
+      if (response.status === 404) return;
+      if (!response.ok) throw new Error(`load failed: ${response.status}`);
+      fillForm(await response.json());
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      setStatus("Saving...");
+      const response = await fetch(profileUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formPayload())
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        setStatus(body.error || `Save failed (${response.status})`);
+        return;
+      }
+      setStatus("Saved. Ready to roast you.");
+    });
+
+    roastButton.addEventListener("click", async () => {
+      roastButton.disabled = true;
+      setStatus("Writing your roast...");
+      try {
+        const response = await fetch(`${profileUrl}/roast`, { method: "POST" });
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          setStatus(body.error || `Roast failed (${response.status})`);
+          return;
+        }
+        const blob = await response.blob();
+        player.src = URL.createObjectURL(blob);
+        player.hidden = false;
+        await player.play().catch(() => {});
+        setStatus("Here it is.");
+      } finally {
+        roastButton.disabled = false;
+      }
+    });
+
+    categorySelect.addEventListener("change", renderHints);
+    renderHints();
+    loadProfile().catch((error) => setStatus(error.message));
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+.git
+.github
+.env
+.env.*
+*.mp3
+*.exe
+bin/
+coverage.out
+img/
+README.md
