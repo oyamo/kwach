@@ -192,6 +192,8 @@
     const SPEECH_MULTIPLIER = 3;
     const MIN_THRESHOLD = 0.02;
     const THINK_CLIPS = ["think1.mp3", "think2.mp3", "think3.mp3"];
+    const PATIENCE_CLIPS = Array.from({ length: 13 }, (_, i) => `patience${i + 1}.mp3`);
+    const PATIENCE_MS = 7000;
 
     function wordIn(text, words) {
       return words.find((word) => new RegExp(`\\b${word}\\b`).test(text)) || null;
@@ -322,31 +324,46 @@
       micButton.style.removeProperty("--level");
     }
 
-    let clipPlayer = null;
+    let currentClip = null;
+    const PAUSE_BEFORE_LISTEN_MS = 450;
+
+    const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
     function playClip(file) {
       return new Promise((resolve) => {
         const audio = new Audio(`audio/${file}`);
-        clipPlayer = audio;
-        const done = () => {
-          if (clipPlayer === audio) clipPlayer = null;
-          resolve();
+        const finish = (played) => {
+          if (currentClip?.audio === audio) currentClip = null;
+          resolve(played);
         };
-        audio.onended = done;
-        audio.onerror = done;
-        audio.onpause = done;
-        audio.play().catch(done);
+        currentClip = { audio, cancel: () => { audio.pause(); finish(false); } };
+        audio.onended = () => finish(true);
+        audio.onerror = () => finish(true);
+        audio.play().catch(() => finish(false));
       });
+    }
+
+    function cancelClip() {
+      currentClip?.cancel();
+      currentClip = null;
     }
 
     async function speak(files, token) {
       for (const file of files) {
-        if (token !== askToken) return;
-        await playClip(file);
+        if (token !== askToken) return false;
+        if (!(await playClip(file))) return false;
       }
+      return token === askToken;
     }
 
     const recognition = Recognition ? new Recognition() : null;
+
+    let patienceTimer = null;
+
+    function clearPatience() {
+      clearTimeout(patienceTimer);
+      patienceTimer = null;
+    }
 
     function listen() {
       if (!active) return;
@@ -354,11 +371,30 @@
       awaitingSpeech = true;
       setStatus("Listening...");
       startMeter();
+      clearPatience();
+      patienceTimer = setTimeout(impatient, PATIENCE_MS);
       try {
         recognition.start();
       } catch {
         // already listening
       }
+    }
+
+    async function impatient() {
+      patienceTimer = null;
+      if (!active || heard) return;
+      const token = askToken;
+      awaitingSpeech = false;
+      try {
+        recognition.abort();
+      } catch {
+        // not running
+      }
+      stopMeter();
+      setStatus("");
+      const clip = PATIENCE_CLIPS[Math.floor(Math.random() * PATIENCE_CLIPS.length)];
+      const played = await playClip(clip);
+      if (played && active && token === askToken) listen();
     }
 
     async function ask(retry) {
@@ -367,12 +403,21 @@
       textLine.textContent = question.ask;
       setStatus(retry ? question.retry : "");
       const n = step + 1;
-      await speak(retry ? [`r${n}.mp3`, `q${n}.mp3`] : [`q${n}.mp3`], token);
+      const played = await speak(retry ? [`r${n}.mp3`, `q${n}.mp3`] : [`q${n}.mp3`], token);
+      if (!played) {
+        if (token === askToken) {
+          setStatus("Tap anywhere to continue.");
+          document.addEventListener("click", () => ask(false), { once: true });
+        }
+        return;
+      }
+      await pause(PAUSE_BEFORE_LISTEN_MS);
       if (token === askToken) listen();
     }
 
     function stopFlow(message) {
       active = false;
+      clearPatience();
       stopMeter();
       try {
         recognition.abort();
@@ -380,8 +425,7 @@
         // not running
       }
       askToken++;
-      clipPlayer?.pause();
-      clipPlayer = null;
+      cancelClip();
       setPressed(false);
       setStatus(message);
     }
@@ -406,7 +450,7 @@
     }
 
     function blameUser() {
-      clipPlayer?.pause();
+      cancelClip();
       textLine.textContent = "The server gave up on you. Bold move.";
       setStatus("Internal server error. Congratulations, you broke a server. That's a talent.");
       playClip("error.mp3");
@@ -417,7 +461,7 @@
       setStatus("");
       textLine.textContent = "Let me think...";
       textLine.classList.add("thinking");
-      playClip(THINK_CLIPS[Math.floor(Math.random() * THINK_CLIPS.length)]);
+      const thinking = playClip(THINK_CLIPS[Math.floor(Math.random() * THINK_CLIPS.length)]);
       try {
         const response = await fetch(`${profileUrl}/roast`, { method: "POST" });
         if (response.status === 500) {
@@ -425,12 +469,15 @@
           return;
         }
         if (!response.ok) {
+          cancelClip();
           const body = await response.json().catch(() => ({}));
           setStatus(body.error || `Roast failed (${response.status})`);
           return;
         }
         const audio = new Audio(URL.createObjectURL(await response.blob()));
+        await thinking;
         textLine.textContent = "";
+        textLine.classList.remove("thinking");
         try {
           await audio.play();
           setStatus("Here it is.");
@@ -453,13 +500,17 @@
 
     function finish() {
       active = false;
+      clearPatience();
       stopMeter();
       setPressed(false);
       textLine.textContent = "Got you. Don't cry.";
       setStatus("Saving...");
-      playClip("done.mp3");
-      save()
-        .then((saved) => saved && roast())
+      playClip("done.mp3")
+        .then(() => pause(PAUSE_BEFORE_LISTEN_MS))
+        .then(() => save())
+        .then((saved) => {
+          if (saved) return roast();
+        })
         .catch((error) => setStatus(error.message));
     }
 
@@ -469,6 +520,11 @@
       if (value === null) return ask(true);
       answers[question.key] = value;
       step += 1;
+      if (question.key === "category") {
+        return playClip("category-joke.mp3").then((played) => {
+          if (played && active) return pause(PAUSE_BEFORE_LISTEN_MS).then(() => ask(false));
+        });
+      }
       if (step < QUESTIONS.length) return ask(false);
       finish();
     }
@@ -492,6 +548,8 @@
       recognition.addEventListener("result", (event) => {
         heard = Array.from(event.results, (result) => result[0].transcript).join(" ").trim();
       });
+
+      recognition.addEventListener("speechstart", clearPatience);
 
       recognition.addEventListener("end", () => {
         if (!awaitingSpeech) return;
@@ -525,6 +583,8 @@
           // not running
         }
         stopMeter();
+        clearPatience();
+        cancelClip();
         handleAnswer(typed);
       });
 
