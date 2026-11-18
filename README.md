@@ -40,7 +40,6 @@ screens it with a safety model, converts it to speech, and stores profiles and c
 ```sh
 go build -o kwach ./cmd/kwach
 ./kwach serve
-./kwach narrate "your prompt" -out roast.mp3
 ```
 
 ## Docker
