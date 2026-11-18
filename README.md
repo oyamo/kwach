@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="img/ico.png" width="200" alt="kwach logo">
+</p>
+
 <h1 align="center">kwach</h1>
 
 <p align="center">
