@@ -494,9 +494,21 @@
       }
     }
 
+    async function micAllowed() {
+      try {
+        const permission = await navigator.permissions.query({ name: "microphone" });
+        return permission.state === "granted";
+      } catch {
+        return false;
+      }
+    }
+
     async function resume() {
       const response = await fetch(profileUrl).catch(() => null);
-      if (response?.ok) roast();
+      if (response?.ok) return roast();
+      if (!recognition) return;
+      if (await micAllowed()) return startFlow();
+      setStatus("Tap the mic and allow microphone access to begin.");
     }
 
     function finish() {
