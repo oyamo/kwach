@@ -7,8 +7,6 @@
 <p align="center">
   <a href="https://github.com/oyamo/kwach/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/oyamo/kwach/ci.yml?style=for-the-badge&label=CI" alt="CI"></a>
   <a href="https://codecov.io/gh/oyamo/kwach"><img src="https://img.shields.io/codecov/c/github/oyamo/kwach?style=for-the-badge" alt="Coverage"></a>
-  <a href="https://pkg.go.dev/github.com/oyamo/kwach"><img src="https://img.shields.io/badge/Go%20Reference-pkg.go.dev-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Reference"></a>
-  <a href="https://goreportcard.com/report/github.com/oyamo/kwach"><img src="https://goreportcard.com/badge/github.com/oyamo/kwach?style=for-the-badge" alt="Go Report Card"></a>
   <a href="go.mod"><img src="https://img.shields.io/github/go-mod/go-version/oyamo/kwach?style=for-the-badge&logo=go&logoColor=white" alt="Go version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/oyamo/kwach?style=for-the-badge" alt="License"></a>
 </p>
