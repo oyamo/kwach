@@ -1,10 +1,15 @@
-<img src="img/ico.png" width="200" alt="kwach logo">
+<p align="center">
+  <img src="img/ico.png" width="200" alt="kwach logo">
+</p>
 
 # kwach
 
-![Go 1.26](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)
-![MIT license](https://img.shields.io/badge/license-MIT-d6402b)
-![Status: prototype](https://img.shields.io/badge/status-prototype-6b6861)
+[![CI](https://img.shields.io/github/actions/workflow/status/oyamo/kwach/ci.yml?style=for-the-badge&label=CI)](https://github.com/oyamo/kwach/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/oyamo/kwach?style=for-the-badge)](https://codecov.io/gh/oyamo/kwach)
+[![Go Reference](https://img.shields.io/badge/Go%20Reference-pkg.go.dev-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://pkg.go.dev/github.com/oyamo/kwach)
+[![Go Report Card](https://goreportcard.com/badge/github.com/oyamo/kwach?style=for-the-badge)](https://goreportcard.com/report/github.com/oyamo/kwach)
+[![Go version](https://img.shields.io/github/go-mod/go-version/oyamo/kwach?style=for-the-badge&logo=go&logoColor=white)](go.mod)
+[![License](https://img.shields.io/github/license/oyamo/kwach?style=for-the-badge)](LICENSE)
 
 A Go service that generates a short roast from a user's profile and recent news,
 screens it with a safety model, converts it to speech, and stores profiles and chat history for context.
@@ -26,15 +31,18 @@ screens it with a safety model, converts it to speech, and stores profiles and c
   </tr>
 </table>
 
-## Quick start
+## Run
+
+Build the binary and provide the configuration through the environment: your service manager, secret store, or container runtime. Never use the placeholder values in `configs/.env.example` for a real deployment.
 
 ```sh
-export $(grep -v '^#' configs/.env.example | xargs)   # example values; replace with real ones
-go run ./cmd/kwach serve                             # JSON API on HTTP_ADDR (default :8080)
-go run ./cmd/kwach narrate "your prompt" -out roast.mp3
+go build -o kwach ./cmd/kwach
+./kwach serve   # JSON API on HTTP_ADDR (default :8080)
 ```
 
-Configuration comes only from environment variables. See [`configs/.env.example`](configs/.env.example) for the full list. The front-end in `web/static/` is served by nginx.
+The app reads only environment variables. See [`configs/.env.example`](configs/.env.example) for the full list of names. The front-end in `web/static/` is served by nginx.
+
+For a one-off roast from the command line: `./kwach narrate "your prompt" -out roast.mp3`.
 
 ## Docker
 
