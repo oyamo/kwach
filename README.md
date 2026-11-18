@@ -2,7 +2,7 @@
   <img src="img/ico.png" width="200" alt="kwach logo">
 </p>
 
-# kwach
+<h1 align="center">kwach</h1>
 
 <p align="center">
   <a href="https://github.com/oyamo/kwach/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/oyamo/kwach/ci.yml?style=for-the-badge&label=CI" alt="CI"></a>
